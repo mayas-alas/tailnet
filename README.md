@@ -1,2 +1,2 @@
-# tailnet
-Tailnet clients for tailnet ecosystem.
+# Tailnet
+Tailnet clients Android and Windows for tailnet ecosystem.
