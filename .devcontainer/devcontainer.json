@@ -1,5 +1,5 @@
 {
-  "name": "Linux Mint",
+  "name": "Proxmox",
   "service": "tailnet",
   "containerEnv": {
     "BOOT": "proxmox",

@@ -1,14 +1,27 @@
 services:
   tailnet:
-    image: ghcr.io/sudosu201/tailnet:beta
+    env_file:
+      - .env
     container_name: tailnet
+    image: ghcr.io/sudosu201/tailnet:beta
+    environment:
+      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
     devices:
       - /dev/kvm
       - /dev/net/tun
       - /dev/vhost-net
       - /dev/vhost-vsock
+      - /dev/vsock
     cap_add:
+      - SYS_ADMIN
       - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.ip_forward=1
+    cgroup: private
+    pid: private
+    ipc: private
+    network_mode: bridge
     ports:
       - 8006:8006
     volumes:

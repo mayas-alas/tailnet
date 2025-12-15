@@ -8,6 +8,18 @@
 
 FROM debian:trixie AS builder
 
+LABEL org.opencontainers.image.authors="sudosu201 <mayas.alas@email.gnx>"
+LABEL org.opencontainers.image.title="Tailnet"
+LABEL org.opencontainers.image.description="Tailnet is a containerized environment."
+LABEL org.opencontainers.image.version="0.0.1"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
+LABEL org.opencontainers.image.source="https://github.com/sudosu201/tailnet"
+LABEL org.opencontainers.image.url="https://github.com/sudosu201/tailnet"
+LABEL org.opencontainers.image.documentation="https://github.com/sudosu201/tailnet"
+LABEL org.opencontainers.image.vendor="Sudosu201"
+LABEL org.opencontainers.image.created="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+LABEL org.opencontainers.image.revision="$(git rev-parse HEAD)"
+
 # Golang version for building Caddy
 ARG GOLANG_VERSION=1.25.3
 
@@ -65,7 +77,7 @@ RUN if [ -n "$PLUGINS" ]; then \
 # Minimal Debian image with Tailscale, Caddy, and optionally Sablier
 ################################################################################
 
-FROM debian:trixie-slim
+FROM debian:trixie
 
 
 ARG TARGETARCH
@@ -146,7 +158,7 @@ RUN apt-get update && \
 RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
  && curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list \
  && apt-get update \
- && apt-get install -y --no-install-recommends tailscale \
+ && apt-get install -y --no-install-recommends tailscale tailscale-archive-keyring \
  && rm -rf /var/lib/apt/lists/*
 
  # Sablier version, passed via build-arg
@@ -177,8 +189,8 @@ EXPOSE 22 5900 8006
 
 ENV SUPPORT="https://github.com/sudosu201/tailnet"
 ENV BOOT="proxmox"
-ENV CPU_CORES="max"
-ENV RAM_SIZE="half"
+ENV CPU_CORES="8G"
+ENV RAM_SIZE="8G"
 ENV DISK_SIZE="174G"
 ENV MACHINE="q35"
 ENV KVM="Y"

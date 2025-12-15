@@ -1,9 +1,13 @@
 services:
   tailnet:
-    image: ghcr.io/sudosu201/tailnet:beta
-    container_name: tailnet
     env_file:
       - .env
+    container_name: tailnet
+    build:
+      context: .
+    image: ghcr.io/sudosu201/tailnet:beta
+    environment:
+      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
     devices:
       - /dev/kvm
       - /dev/net/tun
@@ -22,7 +26,6 @@ services:
     network_mode: bridge
     ports:
       - 8006:8006
-      - 5900:5900
     volumes:
       - ./qemu:/storage
     restart: always
