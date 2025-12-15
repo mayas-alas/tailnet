@@ -1,3 +1,5 @@
+<div align="center"><a href="https://github.com/sudosu201/tailnet"><img src="https://github.com/sudosu201/tailnet/raw/master/.github/logo.png" title="Logo" style="max-width:100%;" width="128" /></a>
+
 # The Robust MF DevOps Superguide (Tailnet + Codespaces + QEMU)
 
 This beta feature in this branch will work for releasing developer infra out of the box, wich contains tha main brach functionality here and added wide cap for release services in a pro infra.

@@ -84,5 +84,6 @@ ENV DISK_TYPE="scsi"
 ENV DISK_IO="threads"
 ENV VM_NET_IP="10.4.20.99"
 ENV ENGINE="podman"
+ENV DEBUG="Y"
 
 ENTRYPOINT ["/usr/bin/tini", "-s", "/run/entry.sh"]
