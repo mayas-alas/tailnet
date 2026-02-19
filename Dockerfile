@@ -26,6 +26,7 @@ LABEL org.opencontainers.image.base.name="tailnet:0.0.2-beta"
 
 # Golang version for building Caddy
 ARG GOLANG_VERSION=1.25.3
+ARG TARGETARCH
 
 # Install build dependencies
 RUN apt-get update && \
@@ -69,10 +70,10 @@ RUN if [ -n "$PLUGINS" ]; then \
     for plugin in $PLUGINS; do \
       PLUGIN_ARGS="$PLUGIN_ARGS --with $plugin"; \
     done; \
-    xcaddy build --with github.com/sablierapp/caddy-sablier; \
+    xcaddy build --with $PLUGIN_ARGS github.com/sablierapp/sablier-caddy-plugin@v1.0.1; \
   else \
     echo "No plugins specified. Building default caddy with Sablier"; \
-    xcaddy build --with github.com/sablierapp/caddy-sablier; \
+    xcaddy build --with github.com/sablierapp/sablier-caddy-plugin@v1.0.1; \
   fi
   
 
@@ -83,7 +84,7 @@ RUN if [ -n "$PLUGINS" ]; then \
 
 FROM debian:trixie
 
-
+ARG GOLANG_VERSION=1.25.3
 ARG TARGETARCH
 ARG VERSION_ARG="0.0.2-beta"
 ARG VERSION_UTK="1.2.0"
@@ -138,8 +139,7 @@ RUN set -eu && \
     echo "allow br0" > /etc/qemu/bridge.conf && \
     mkdir -p /usr/share/novnc && \
     wget "https://github.com/novnc/noVNC/archive/refs/tags/v${VERSION_VNC}.tar.gz" -O /tmp/novnc.tar.gz -q --timeout=10 && \
-    tar -xf /tmp/novnc.tar.gz -C /tmp/ && \
-    mv app core vendor package.json ./*.html /usr/share/novnc && \
+    tar -xf /tmp/novnc.tar.gz -C /usr/share/novnc --strip-components=1 && \
     unlink /etc/nginx/sites-enabled/default && \
     sed -i 's/^worker_processes.*/worker_processes 1;/' /etc/nginx/nginx.conf && \
     echo "$VERSION_ARG" > /run/version && \

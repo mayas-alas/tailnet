@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: tailnet
-        image: ghcr.io/sudosu201/tailnet:beta
+        image: ghcr.io/mayas-alas/tailnet:0.0.2-beta
         env:
         - name: BOOT
           value: "proxmox"

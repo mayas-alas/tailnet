@@ -3,7 +3,7 @@ services:
     env_file:
       - .env
     container_name: tailnet
-    image: ghcr.io/sudosu201/tailnet:beta
+    image: ghcr.io/mayas-alas/tailnet:0.0.2-beta
     environment:
       - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
     devices:

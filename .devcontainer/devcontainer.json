@@ -16,6 +16,9 @@
     "ENGINE": "docker",
     "SUPPORT": "https://github.com/mayas-alas/tailnet"
   },
+  "runArgs": [
+    "--device=/dev/net/tun"
+  ],
   "forwardPorts": [
     8006
   ],
@@ -29,5 +32,5 @@
     "onAutoForward": "ignore"
   },
   "dockerComposeFile": "codespaces.yml",
-  "initializeCommand": "docker  system prune --all --force"
+  "postCreateCommand": "sudo tailscale up --ssh --hostname=tailnet"
 }
