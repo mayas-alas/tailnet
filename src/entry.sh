@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 : "${APP:="Tailnet"}"
 : "${PLATFORM:="x64"}"
-: "${SUPPORT:="https://github.com/qemus/qemu"}"
+: "${SUPPORT:="https://github.com/mayas-alas/tailnet"}"
 
 cd /run
 

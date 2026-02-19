@@ -127,7 +127,7 @@ html() {
 
   local HTML
   HTML=$(<"$TEMPLATE")
-  HTML="${HTML/\[1\]/$title}"
+  HTML="${HTML/\[1\]/$ }"
   HTML="${HTML/\[2\]/$script}"
   HTML="${HTML/\[3\]/$body}"
   HTML="${HTML/\[4\]/$footer}"

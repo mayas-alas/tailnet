@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# You can override this hook to execute a script before startup!
+# You can override this hook to execute a script not before startup! just as hooks
 cd /
 
-. tailnet.sh      # Startup hook tailnet
-. healthcheck.sh      # Load functions healthcheck
-
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
-
-return 0

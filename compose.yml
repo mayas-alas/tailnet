@@ -5,7 +5,7 @@ services:
     container_name: tailnet
     build:
       context: .
-    image: ghcr.io/sudosu201/tailnet:beta
+    image: tailnet:0.0.2-beta
     environment:
       - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TAILNET_NAME=${TAILNET_NAME}

@@ -13,8 +13,8 @@
     "DISK_TYPE": "scsi",
     "DISK_IO": "threads",
     "VM_NET_IP": "10.4.20.99",
-    "ENGINE": "podman",
-    "SUPPORT": "https://github.com/sudosu201/tailnet"
+    "ENGINE": "docker",
+    "SUPPORT": "https://github.com/mayas-alas/tailnet"
   },
   "forwardPorts": [
     8006
@@ -29,5 +29,5 @@
     "onAutoForward": "ignore"
   },
   "dockerComposeFile": "../codespaces.yml",
-  "initializeCommand": "podman  system prune --all --force"
+  "initializeCommand": "docker  system prune --all --force"
 }

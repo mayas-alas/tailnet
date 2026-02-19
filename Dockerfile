@@ -8,17 +8,21 @@
 
 FROM debian:trixie AS builder
 
-LABEL org.opencontainers.image.authors="sudosu201 <mayas.alas@email.gnx>"
+ARG BUILD_DATE
+ARG REVISION
+
+LABEL org.opencontainers.image.authors="Maya <mayas.alas@email.gnx>"
 LABEL org.opencontainers.image.title="Tailnet"
 LABEL org.opencontainers.image.description="Tailnet is a containerized environment."
-LABEL org.opencontainers.image.version="0.0.1"
+LABEL org.opencontainers.image.version="0.0.2-beta"
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
-LABEL org.opencontainers.image.source="https://github.com/sudosu201/tailnet"
-LABEL org.opencontainers.image.url="https://github.com/sudosu201/tailnet"
-LABEL org.opencontainers.image.documentation="https://github.com/sudosu201/tailnet"
+LABEL org.opencontainers.image.source="https://github.com/mayas-alas/tailnet"
+LABEL org.opencontainers.image.url="https://github.com/mayas-alas/tailnet"
+LABEL org.opencontainers.image.documentation="https://github.com/mayas-alas/tailnet"
 LABEL org.opencontainers.image.vendor="GNX Labs"
-LABEL org.opencontainers.image.created="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-LABEL org.opencontainers.image.revision="$(git rev-parse HEAD)"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.revision="${REVISION}"
+LABEL org.opencontainers.image.base.name="tailnet:0.0.2-beta"
 
 # Golang version for building Caddy
 ARG GOLANG_VERSION=1.25.3
@@ -41,10 +45,10 @@ RUN apt-get update && \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install Golang
-RUN wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz \
-  && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz \
-  && rm go${GOLANG_VERSION}.linux-amd64.tar.gz
+# Download and install Golang based on target architecture
+RUN wget -q "https://go.dev/dl/go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz" -O /tmp/go.tar.gz \
+  && tar -C /usr/local -xzf /tmp/go.tar.gz \
+  && rm /tmp/go.tar.gz
 
 ENV PATH="/usr/local/go/bin:$PATH"
 
@@ -65,10 +69,10 @@ RUN if [ -n "$PLUGINS" ]; then \
     for plugin in $PLUGINS; do \
       PLUGIN_ARGS="$PLUGIN_ARGS --with $plugin"; \
     done; \
-    xcaddy build $PLUGIN_ARGS; \
+    xcaddy build --with github.com/sablierapp/caddy-sablier; \
   else \
-    echo "No plugins specified. Building default caddy"; \
-    xcaddy build; \
+    echo "No plugins specified. Building default caddy with Sablier"; \
+    xcaddy build --with github.com/sablierapp/caddy-sablier; \
   fi
   
 
@@ -81,7 +85,7 @@ FROM debian:trixie
 
 
 ARG TARGETARCH
-ARG VERSION_ARG="0.0.1-beta"
+ARG VERSION_ARG="0.0.2-beta"
 ARG VERSION_UTK="1.2.0"
 ARG VERSION_VNC="1.7.0-beta"
 ARG VERSION_PASST="2025_09_19"
@@ -105,16 +109,21 @@ RUN set -eu && \
         fdisk \
         nginx \
         swtpm \
+        vim \
+        file \
+        libc6 \
         procps \
         ethtool \
         iptables \
         iproute2 \
         dnsmasq \
+        dnsutils \
         xz-utils \
         apt-utils \
         net-tools \
         e2fsprogs \
         qemu-utils \
+        openresolv \
         websocketd \
         iputils-ping \
         genisoimage \
@@ -130,28 +139,11 @@ RUN set -eu && \
     mkdir -p /usr/share/novnc && \
     wget "https://github.com/novnc/noVNC/archive/refs/tags/v${VERSION_VNC}.tar.gz" -O /tmp/novnc.tar.gz -q --timeout=10 && \
     tar -xf /tmp/novnc.tar.gz -C /tmp/ && \
-    cd "/tmp/noVNC-${VERSION_VNC}" && \
     mv app core vendor package.json ./*.html /usr/share/novnc && \
     unlink /etc/nginx/sites-enabled/default && \
     sed -i 's/^worker_processes.*/worker_processes 1;/' /etc/nginx/nginx.conf && \
     echo "$VERSION_ARG" > /run/version && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      iptables \
-      ca-certificates \
-      curl \
-      vim \
-      libc6 \
-      jq \
-      iputils-ping \
-      dnsutils \
-      openresolv \
-      file \
-      iproute2 \
-    && rm -rf /var/lib/apt/lists/*
 
     
 # Install Tailscale from official repository
@@ -161,9 +153,6 @@ RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg | tee
  && apt-get install -y --no-install-recommends tailscale tailscale-archive-keyring \
  && rm -rf /var/lib/apt/lists/*
 
- # Sablier version, passed via build-arg
-ARG SABLIER_VERSION
-ENV SABLIER_VERSION=${SABLIER_VERSION}
 
 # Copy Caddy binary from builder stage
 COPY --from=builder /caddy /usr/bin/caddy
@@ -181,16 +170,17 @@ COPY --chmod=664 ./web/conf/defaults.json /usr/share/novnc
 COPY --chmod=664 ./web/conf/mandatory.json /usr/share/novnc
 COPY --chmod=744 ./web/conf/nginx.conf /etc/nginx/default.conf
 COPY --chmod=644 ./qemu/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY --chmod=644 ./qemu/Caddyfile /etc/caddy/Caddyfile
 
 ADD --chmod=755 "https://github.com/qemus/fiano/releases/download/v${VERSION_UTK}/utk_${VERSION_UTK}_${TARGETARCH}.bin" /run/utk.bin
 
 VOLUME /storage
-EXPOSE 22 5900 8006
+EXPOSE 22 5900 8006 10000 2019
 
-ENV SUPPORT="https://github.com/sudosu201/tailnet"
+ENV SUPPORT="https://github.com/mayas-alas/tailnet"
 ENV BOOT="proxmox"
-ENV CPU_CORES="8G"
-ENV RAM_SIZE="8G"
+ENV CPU_CORES="max"
+ENV RAM_SIZE="max"
 ENV DISK_SIZE="174G"
 ENV MACHINE="q35"
 ENV KVM="Y"
@@ -199,8 +189,7 @@ ENV DISK_FMT="qcow2"
 ENV DISK_TYPE="scsi"
 ENV DISK_IO="threads"
 ENV VM_NET_IP="10.4.20.99"
-ENV ENGINE="podman"
+ENV ENGINE="Docker"
 ENV DEBUG="Y"
-ENV TAILSCALE_HOSTNAME="tailnet"
 
 ENTRYPOINT ["/usr/bin/tini", "-s", "/run/entry.sh"]

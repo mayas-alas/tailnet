@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-      name: tailnet-pvc
+  name: tailnet-pvc
 spec:
   accessModes:
   - ReadWriteOnce
@@ -13,9 +13,9 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-      name: tailnet
+  name: tailnet
   labels:
-        name: tailnet
+    name: tailnet
 spec:
   replicas: 1
   selector:
@@ -27,7 +27,7 @@ spec:
         app: tailnet
     spec:
       containers:
-      -     name: tailnet
+      - name: tailnet
         image: ghcr.io/sudosu201/tailnet:beta
         env:
         - name: BOOT
@@ -57,7 +57,7 @@ spec:
       volumes:
       - name: storage
         persistentVolumeClaim:
-          claim    name: tailnet-pvc
+          claimName: tailnet-pvc
       - hostPath:
           path: /dev/kvm
         name: dev-kvm
@@ -69,7 +69,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-      name: tailnet
+  name: tailnet
 spec:
   internalTrafficPolicy: Cluster
   ports:
@@ -82,5 +82,5 @@ spec:
       protocol: TCP
       targetPort: 5900
   selector:
-    app: qemu
+    app: tailnet
   type: ClusterIP

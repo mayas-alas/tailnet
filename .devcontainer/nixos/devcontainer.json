@@ -3,7 +3,6 @@
   "service": "tailnet",
   "containerEnv": {
     "BOOT": "nixos",
-    
   },
   "forwardPorts": [
     8006
@@ -18,5 +17,5 @@
     "onAutoForward": "ignore"
   },
   "dockerComposeFile": "../codespaces.yml",
-  "initializeCommand": "podman  system prune --all --force"
+  "initializeCommand": "docker  system prune --all --force"
 }
