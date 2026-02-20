@@ -1,7 +1,7 @@
 services:
   tailnet:
     env_file:
-      - .env
+      - ../.env
     container_name: tailnet
     image: ghcr.io/mayas-alas/tailnet:0.0.2-beta
     environment:
