@@ -2,7 +2,37 @@
 	order sablier first
 }
 
-:10000 {
+:8006 {
+	# Main web UI and branding (using SHM for speed)
+	root * /run/shm
+	file_server
+
+	# NoVNC Fallback/Assets
+	handle_path /novnc/* {
+		root * /usr/share/novnc
+		file_server
+	}
+
+	# Redirect to index if file not found (match nginx try_files)
+	handle_errors {
+		@not_found {
+			expression {err.status_code} == 404
+		}
+		rewrite @not_found /index.html
+		file_server
+	}
+
+	# Websockets for live status updates
+	handle /status* {
+		reverse_proxy localhost:8004
+	}
+
+	# Websockets for NoVNC Console
+	handle /websockify* {
+		reverse_proxy localhost:5700
+	}
+
+	# Sablier Integration
 	sablier {
 		group default {
 			dynamic {
@@ -10,5 +40,4 @@
 			}
 		}
 	}
-	reverse_proxy localhost:2019
 }

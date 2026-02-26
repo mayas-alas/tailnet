@@ -11,10 +11,12 @@ FROM debian:trixie AS builder
 ARG BUILD_DATE
 ARG REVISION
 
+ARG VERSION="0.0.4-beta"
+
 LABEL org.opencontainers.image.authors="Maya <mayas.alas@email.gnx>"
 LABEL org.opencontainers.image.title="Tailnet"
 LABEL org.opencontainers.image.description="Tailnet is a containerized environment."
-LABEL org.opencontainers.image.version="0.0.2-beta"
+LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
 LABEL org.opencontainers.image.source="https://github.com/mayas-alas/tailnet"
 LABEL org.opencontainers.image.url="https://github.com/mayas-alas/tailnet"
@@ -22,10 +24,10 @@ LABEL org.opencontainers.image.documentation="https://github.com/mayas-alas/tail
 LABEL org.opencontainers.image.vendor="GNX Labs"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${REVISION}"
-LABEL org.opencontainers.image.base.name="tailnet:0.0.2-beta"
+LABEL org.opencontainers.image.base.name="tailnet:${VERSION}"
 
 # Golang version for building Caddy
-ARG GOLANG_VERSION=1.25.3
+ARG GOLANG_VERSION=1.25.5
 ARG TARGETARCH
 
 # Install build dependencies
@@ -70,7 +72,7 @@ RUN if [ -n "$PLUGINS" ]; then \
     for plugin in $PLUGINS; do \
       PLUGIN_ARGS="$PLUGIN_ARGS --with $plugin"; \
     done; \
-    xcaddy build --with $PLUGIN_ARGS github.com/sablierapp/sablier-caddy-plugin@v1.0.1; \
+    xcaddy build --with github.com/sablierapp/sablier-caddy-plugin@v1.0.1 $PLUGIN_ARGS; \
   else \
     echo "No plugins specified. Building default caddy with Sablier"; \
     xcaddy build --with github.com/sablierapp/sablier-caddy-plugin@v1.0.1; \
@@ -79,15 +81,13 @@ RUN if [ -n "$PLUGINS" ]; then \
 
 ################################################################################
 # Stage 2: Runtime
-# Minimal Debian image with Tailscale, Caddy, and optionally Sablier
+# Slim MVP Variant: Consolidation into Caddy, minimal footprint
 ################################################################################
 
-FROM debian:trixie
+FROM debian:trixie-slim
 
-ARG GOLANG_VERSION=1.25.3
 ARG TARGETARCH
-ARG VERSION_ARG="0.0.2-beta"
-ARG VERSION_UTK="1.2.0"
+ARG VERSION="0.0.4-beta"
 ARG VERSION_VNC="1.7.0-beta"
 ARG VERSION_PASST="2025_09_19"
 
@@ -95,90 +95,73 @@ ARG DEBCONF_NOWARNINGS="yes"
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NONINTERACTIVE_SEEN="true"
 
+# Curated Package List for Slim MVP
 RUN set -eu && \
     apt-get update && \
     apt-get --no-install-recommends -y install \
+        tini \
         supervisor \
-        bc \
+        ca-certificates \
+        curl \
+        wget \
         jq \
         xxd \
-        tini \
-        wget \
-        7zip \
-        curl \
-        ovmf \
-        fdisk \
-        nginx \
-        swtpm \
-        vim \
-        file \
-        libc6 \
         procps \
-        ethtool \
+        7zip \
+        ovmf \
+        swtpm \
+        fdisk \
+        libc6 \
         iptables \
         iproute2 \
         dnsmasq \
-        dnsutils \
-        xz-utils \
-        apt-utils \
-        net-tools \
         e2fsprogs \
         qemu-utils \
         openresolv \
         websocketd \
-        iputils-ping \
         genisoimage \
         inotify-tools \
-        netcat-openbsd \
-        ca-certificates \
         qemu-system-x86 && \
+    # Install PASST (High-Performance Net) per user request
     wget "https://github.com/qemus/passt/releases/download/v${VERSION_PASST}/passt_${VERSION_PASST}_${TARGETARCH}.deb" -O /tmp/passt.deb -q && \
     dpkg -i /tmp/passt.deb && \
-    apt-get clean && \
-    mkdir -p /etc/qemu && \
-    echo "allow br0" > /etc/qemu/bridge.conf && \
+    # Install NoVNC
     mkdir -p /usr/share/novnc && \
-    wget "https://github.com/novnc/noVNC/archive/refs/tags/v${VERSION_VNC}.tar.gz" -O /tmp/novnc.tar.gz -q --timeout=10 && \
+    wget "https://github.com/novnc/noVNC/archive/refs/tags/v${VERSION_VNC}.tar.gz" -O /tmp/novnc.tar.gz -q && \
     tar -xf /tmp/novnc.tar.gz -C /usr/share/novnc --strip-components=1 && \
-    unlink /etc/nginx/sites-enabled/default && \
-    sed -i 's/^worker_processes.*/worker_processes 1;/' /etc/nginx/nginx.conf && \
-    echo "$VERSION_ARG" > /run/version && \
+    # Housekeeping
+    echo "$VERSION" > /run/version && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-    
 # Install Tailscale from official repository
 RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
  && curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list \
  && apt-get update \
- && apt-get install -y --no-install-recommends tailscale tailscale-archive-keyring \
+ && apt-get install -y --no-install-recommends tailscale \
  && rm -rf /var/lib/apt/lists/*
-
 
 # Copy Caddy binary from builder stage
 COPY --from=builder /caddy /usr/bin/caddy
 
-# Copy entrypoint and healthcheck scripts
+# Build-time configuration and scripts
 COPY tailnet.sh /tailnet.sh
 COPY healthcheck.sh /healthcheck.sh
-
-# Make scripts executable
 RUN chmod +x /tailnet.sh /healthcheck.sh
 
 COPY --chmod=755 ./src /run/
 COPY --chmod=755 ./web /var/www/
 COPY --chmod=664 ./web/conf/defaults.json /usr/share/novnc
 COPY --chmod=664 ./web/conf/mandatory.json /usr/share/novnc
-COPY --chmod=744 ./web/conf/nginx.conf /etc/nginx/default.conf
 COPY --chmod=644 ./qemu/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY --chmod=644 ./qemu/Caddyfile /etc/caddy/Caddyfile
 
-ADD --chmod=755 "https://github.com/qemus/fiano/releases/download/v${VERSION_UTK}/utk_${VERSION_UTK}_${TARGETARCH}.bin" /run/utk.bin
-
 VOLUME /storage
-EXPOSE 22 5900 8006 10000 2019
+
 
 ENV SUPPORT="https://github.com/mayas-alas/tailnet"
 ENV BOOT="proxmox"
+ENV VMX="Y"
 ENV CPU_CORES="max"
 ENV RAM_SIZE="max"
 ENV DISK_SIZE="174G"
@@ -187,9 +170,13 @@ ENV KVM="Y"
 ENV GPU="Y"
 ENV DISK_FMT="qcow2"
 ENV DISK_TYPE="scsi"
-ENV DISK_IO="threads"
+ENV DISK_IO="io_uring"
+ENV DISK_CACHE="writeback"
+ENV NETWORK="passt"
+ENV MTU="1280"
 ENV VM_NET_IP="10.4.20.99"
 ENV ENGINE="Docker"
 ENV DEBUG="Y"
-
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD ["/bin/sh", "/healthcheck.sh", "status"]
 ENTRYPOINT ["/usr/bin/tini", "-s", "/run/entry.sh"]

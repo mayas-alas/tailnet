@@ -1,34 +1,24 @@
 services:
   tailnet:
     env_file:
-      - .env
+      - ENV_FILE #if using .env file use instead: ENV_FILE: .env
     container_name: tailnet
     build:
       context: .
     image: tailnet:0.0.2-beta
-    environment:
-      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
-      - TAILNET_NAME=${TAILNET_NAME}
-    devices:
-      - /dev/kvm
-      - /dev/net/tun
-      - /dev/vhost-net
-      - /dev/vhost-vsock
-      - /dev/vsock
-    cap_add:
-      - SYS_ADMIN
-      - NET_ADMIN
+    privileged: true
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv6.ip_forward=1
-    cgroup: private
-    pid: private
-    ipc: private
     network_mode: bridge
-    ports:
-      - 8006:8006
     volumes:
       - ./qemu:/storage
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/healthcheck.sh", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: always
     stop_grace_period: 2m
     develop:
@@ -41,7 +31,13 @@ services:
           target: /usr/share/novnc/mandatory.json
         - action: sync
           path: ./web/conf/nginx.conf
-          target: /etc/nginx/default.conf
+          target: /etc/nginx/sites-enabled/web.conf
+        - action: sync
+          path: ./tailnet.sh
+          target: /tailnet.sh
+        - action: sync
+          path: ./healthcheck.sh
+          target: /healthcheck.sh
         - action: sync
           path: ./web
           target: /var/www/

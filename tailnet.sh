@@ -13,8 +13,9 @@ case "${1:-start}" in
     set -e
 
     # Start tailscaled and wait for it to come up
+    mkdir -p /storage/tailscale
     tailscaled \
-      --state=/tailscale/tailscaled.state \
+      --state=/storage/tailscale/tailscaled.state \
       --socket=/var/run/tailscale/tailscaled.sock \
       --tun=userspace-networking \
       &

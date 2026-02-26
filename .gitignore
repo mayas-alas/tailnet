@@ -1,1 +1,3 @@
 /proxmox
+*.iso
+ENV_FILE

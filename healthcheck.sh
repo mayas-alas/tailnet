@@ -17,32 +17,46 @@ _run_checks() {
   # Set default ports
   SABLIER_PORT=${SABLIER_PORT:-10000}
   CADDY_PORT=${CADDY_PORT:-2019}
+  WEB_PORT=${WEB_PORT:-8006}
 
-  # Check Sablier health (via Caddy integration)
-  echo "Checking Sablier health on port ${SABLIER_PORT}..."
-  if ! curl -sf -o /dev/null http://localhost:${SABLIER_PORT}/; then
-    echo "ERROR: Sablier integration health check failed"
-    HEALTHY=1
-  else
-    echo "✓ Sablier integration is healthy"
-  fi
-
-  # Check Caddy admin API health
-  echo "Checking Caddy health on port ${CADDY_PORT}..."
-  if ! curl -sf -o /dev/null http://localhost:${CADDY_PORT}/config; then
-    echo "ERROR: Caddy health check failed"
+  # 1. Check Caddy admin API health
+  if ! curl -sf -o /dev/null "http://localhost:${CADDY_PORT}/config"; then
+    echo "ERROR: Caddy health check failed (port ${CADDY_PORT})"
     HEALTHY=1
   else
     echo "✓ Caddy is healthy"
   fi
 
-  # Check Tailscale network health
-  echo "Checking Tailscale health..."
-  if ! tailscale status --json 2>/dev/null | jq -e '.Self.Online == true' > /dev/null; then
-    echo "ERROR: Tailscale is not online"
+  # 2. Check Sablier health (usually integrated via Caddy or standalone)
+  if ! curl -sf -o /dev/null "http://localhost:${SABLIER_PORT}/"; then
+    echo "ERROR: Sablier health check failed (port ${SABLIER_PORT})"
+    HEALTHY=1
+  else
+    echo "✓ Sablier is healthy"
+  fi
+
+  # 3. Check Tailscale network status
+  if ! tailscale status --json 2>/dev/null | jq -e '.Self.Online == true' > /dev/null 2>&1; then
+    echo "ERROR: Tailscale node is not online"
     HEALTHY=1
   else
     echo "✓ Tailscale is online"
+  fi
+
+  # 4. Check Nginx health
+  if ! curl -sf -o /dev/null "http://localhost:${WEB_PORT}/"; then
+    echo "ERROR: Nginx health check failed (port ${WEB_PORT})"
+    HEALTHY=1
+  else
+    echo "✓ Nginx is healthy"
+  fi
+
+  # 5. Check QEMU process
+  if ! pgrep -f "qemu-system-x86_64" > /dev/null 2>&1; then
+    echo "ERROR: QEMU process is not running"
+    HEALTHY=1
+  else
+    echo "✓ QEMU is running"
   fi
 
   return $HEALTHY
