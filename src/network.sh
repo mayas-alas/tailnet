@@ -615,7 +615,11 @@ closeBridge() {
 
 closeWeb() {
   
-  # Shutdown websocket
+  # Reload Nginx if running
+  if pgrep nginx > /dev/null; then
+    nginx -s reload
+  fi
+
   local pid="/var/run/websocketd.pid"
   [ -s "$pid" ] && pKill "$(<"$pid")"
   rm -f "$pid"

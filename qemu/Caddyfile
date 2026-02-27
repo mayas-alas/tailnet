@@ -2,42 +2,25 @@
 	order sablier first
 }
 
-:8006 {
-	# Main web UI and branding (using SHM for speed)
-	root * /run/shm
-	file_server
-
-	# NoVNC Fallback/Assets
-	handle_path /novnc/* {
-		root * /usr/share/novnc
-		file_server
+# Example Built-in Web Service
+:8080 {
+	handle /tailnet {
+		respond "Tailnet System Core" 200
 	}
-
-	# Redirect to index if file not found (match nginx try_files)
-	handle_errors {
-		@not_found {
-			expression {err.status_code} == 404
-		}
-		rewrite @not_found /index.html
-		file_server
+	handle /status {
+		respond "READY" 200
 	}
-
-	# Websockets for live status updates
-	handle /status* {
-		reverse_proxy localhost:8004
+	handle {
+		respond "Tailnet Built-in Service Example" 200
 	}
+}
 
-	# Websockets for NoVNC Console
-	handle /websockify* {
-		reverse_proxy localhost:5700
+# Sablier Admin / Smoke Test for Legacy Compatibility
+:10000 {
+	handle /health {
+		respond "OK" 200
 	}
-
-	# Sablier Integration
-	sablier {
-		group default {
-			dynamic {
-				display_errors
-			}
-		}
+	handle {
+		reverse_proxy localhost:2019
 	}
 }

@@ -19,9 +19,9 @@ _run_checks() {
   CADDY_PORT=${CADDY_PORT:-2019}
   WEB_PORT=${WEB_PORT:-8006}
 
-  # 1. Check Caddy admin API health
-  if ! curl -sf -o /dev/null "http://localhost:${CADDY_PORT}/config"; then
-    echo "ERROR: Caddy health check failed (port ${CADDY_PORT})"
+  # 1. Check Caddy built-in service health
+  if ! curl -sf -o /dev/null "http://localhost:8080/status"; then
+    echo "ERROR: Caddy health check failed (port 8080)"
     HEALTHY=1
   else
     echo "✓ Caddy is healthy"
@@ -33,6 +33,14 @@ _run_checks() {
     HEALTHY=1
   else
     echo "✓ Sablier is healthy"
+  fi
+
+  # 2.5 Check Nginx health (on WEB_PORT)
+  if ! curl -sf -o /dev/null "http://localhost:${WEB_PORT}/"; then
+    echo "ERROR: Nginx health check failed (port ${WEB_PORT})"
+    HEALTHY=1
+  else
+    echo "✓ Nginx is healthy"
   fi
 
   # 3. Check Tailscale network status

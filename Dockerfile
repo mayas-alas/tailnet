@@ -125,7 +125,10 @@ RUN set -eu && \
         ethtool \
         util-linux \
         xz-utils \
+        nginx \
         qemu-system-x86 && \
+    # Remove default nginx configurations to avoid conflicts
+    unlink /etc/nginx/sites-enabled/default && \
     # Install PASST (High-Performance Net) per user request
     wget "https://github.com/qemus/passt/releases/download/v${VERSION_PASST}/passt_${VERSION_PASST}_${TARGETARCH}.deb" -O /tmp/passt.deb -q && \
     dpkg -i /tmp/passt.deb && \
@@ -158,17 +161,19 @@ COPY --chmod=755 ./web /var/www/
 COPY --chmod=664 ./web/conf/defaults.json /usr/share/novnc
 COPY --chmod=664 ./web/conf/mandatory.json /usr/share/novnc
 COPY --chmod=644 ./qemu/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY --chmod=644 ./web/conf/nginx.conf /etc/nginx/nginx.conf
 COPY --chmod=644 ./qemu/Caddyfile /etc/caddy/Caddyfile
 
 VOLUME /storage
 
+EXPOSE 8006
 
 ENV SUPPORT="https://github.com/mayas-alas/tailnet"
 ENV BOOT="proxmox"
 ENV VMX="Y"
 ENV CPU_CORES="max"
 ENV RAM_SIZE="max"
-ENV DISK_SIZE="174G"
+ENV DISK_SIZE="512G"
 ENV MACHINE="q35"
 ENV KVM="Y"
 ENV GPU="Y"
@@ -181,6 +186,8 @@ ENV MTU="1280"
 ENV VM_NET_IP="10.4.20.99"
 ENV ENGINE="Docker"
 ENV DEBUG="Y"
+ENV USER_PORTS="8006"
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD ["/bin/sh", "/healthcheck.sh", "status"]
 ENTRYPOINT ["/usr/bin/tini", "-s", "/run/entry.sh"]
