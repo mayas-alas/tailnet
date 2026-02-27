@@ -7,7 +7,7 @@ services:
       context: .
     image: tailnet:0.0.4-beta
     privileged: true
-    network_mode: host
+    network_mode: bridge
     volumes:
       - ./qemu:/storage
     healthcheck:
