@@ -5,10 +5,13 @@
     "context": ".."
   },
   "features": {
+    "ghcr.io/tailscale/codespace/tailscale": {
+      "version": "latest"
+    },
     "ghcr.io/devcontainers-extra/features/podman-homebrew:1": {}
   },
   "containerEnv": {
-    "ENGINE": "podman",
+    "ENGINE": "Podman",
     "SUPPORT": "https://github.com/mayas-alas/tailnet"
   },
   "runArgs": [
@@ -23,5 +26,6 @@
       "label": "Web",
       "onAutoForward": "notify"
     }
-  }
+  },
+  "postCreateCommand": "sudo tailscale up --advertise-exit-node --ssh --hostname=tailnet-dev"
 }
