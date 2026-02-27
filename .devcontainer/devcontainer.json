@@ -5,13 +5,10 @@
     "context": ".."
   },
   "features": {
-    "ghcr.io/tailscale/codespace/tailscale": {
-      "version": "latest"
-    },
     "ghcr.io/devcontainers-extra/features/podman-homebrew:1": {}
   },
   "containerEnv": {
-    "ENGINE": "Podman",
+    "ENGINE": "podman",
     "SUPPORT": "https://github.com/mayas-alas/tailnet"
   },
   "runArgs": [
@@ -27,5 +24,5 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "sudo tailscale up --advertise-exit-node --ssh --hostname=tailnet-dev"
+  "postCreateCommand": "/home/linuxbrew/.linuxbrew/bin/brew install podman-compose && sudo tailscale up --ssh --hostname=tailnet-dev"
 }
