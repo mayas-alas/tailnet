@@ -614,11 +614,7 @@ closeBridge() {
 }
 
 closeWeb() {
-
-  # Shutdown nginx
-  nginx -s stop 2> /dev/null
-  fWait "nginx"
-
+  
   # Shutdown websocket
   local pid="/var/run/websocketd.pid"
   [ -s "$pid" ] && pKill "$(<"$pid")"

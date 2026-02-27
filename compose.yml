@@ -5,7 +5,7 @@ services:
     container_name: tailnet
     build:
       context: .
-    image: tailnet:0.0.2-beta
+    image: tailnet:0.0.4-beta
     privileged: true
     sysctls:
       - net.ipv4.ip_forward=1

@@ -121,6 +121,10 @@ RUN set -eu && \
         websocketd \
         genisoimage \
         inotify-tools \
+        net-tools \
+        ethtool \
+        util-linux \
+        xz-utils \
         qemu-system-x86 && \
     # Install PASST (High-Performance Net) per user request
     wget "https://github.com/qemus/passt/releases/download/v${VERSION_PASST}/passt_${VERSION_PASST}_${TARGETARCH}.deb" -O /tmp/passt.deb -q && \

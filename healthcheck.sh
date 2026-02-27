@@ -43,14 +43,6 @@ _run_checks() {
     echo "✓ Tailscale is online"
   fi
 
-  # 4. Check Nginx health
-  if ! curl -sf -o /dev/null "http://localhost:${WEB_PORT}/"; then
-    echo "ERROR: Nginx health check failed (port ${WEB_PORT})"
-    HEALTHY=1
-  else
-    echo "✓ Nginx is healthy"
-  fi
-
   # 5. Check QEMU process
   if ! pgrep -f "qemu-system-x86_64" > /dev/null 2>&1; then
     echo "ERROR: QEMU process is not running"
