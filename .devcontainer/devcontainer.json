@@ -9,7 +9,8 @@
   },
   "containerEnv": {
     "ENGINE": "podman",
-    "SUPPORT": "https://github.com/mayas-alas/tailnet"
+    "SUPPORT": "https://github.com/mayas-alas/tailnet",
+    "HOMEBREW_NO_INSTALL_CLEANUP": "1"
   },
   "runArgs": [
     "--device=/dev/net/tun",
