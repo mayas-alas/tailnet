@@ -15,25 +15,22 @@
   },
   "containerEnv": {
     "ENGINE": "podman",
-    "SUPPORT": "https://github.com/mayas-alas/tailnet"
+    "GPU": "N",
+    "MTU": "1280",
+    "DISK_SIZE": "256G",
+    "SUPPORT": "https://github.com/mayas-alas/tailnet",
+    "USER_PORTS": "22,8080,8006,10000,5900"
   },
   "runArgs": [
     "--device=/dev/net/tun",
-    "--privileged",
-    "--cap-add=SYS_ADMIN",
-    "--cap-add=NET_ADMIN",
-    "--cap-add=SYS_RESOURCE",
-    "--cap-add=SYS_NICE",
-    "--cap-add=NET_RAW",
-    "--cap-add=IPC_LOCK",
-    "--cap-add=SYS_PTRACE"
-  ],
-  "securityOpt": [
-    "apparmor=unconfined",
-    "seccomp=unconfined"
+    "--privileged"
   ],
   "forwardPorts": [
-    8006
+    8006,
+    8080,
+    22,
+    10000,
+    5900
   ],
   "portsAttributes": {
     "8006": {
