@@ -1,1 +1,28 @@
-{"image":"ghcr.io/devcontainers-extra/features/podman-homebrew:1"}
+{
+  "name": "Tailnet Podman Environment",
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "context": "."
+  },
+  "features": {
+    "ghcr.io/devcontainers-extra/features/podman-homebrew:1": {}
+  },
+  "containerEnv": {
+    "ENGINE": "podman",
+    "SUPPORT": "https://github.com/mayas-alas/tailnet"
+  },
+  "runArgs": [
+    "--device=/dev/net/tun",
+    "--privileged"
+  ],
+  "forwardPorts": [
+    8006
+  ],
+  "portsAttributes": {
+    "8006": {
+      "label": "Web",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "sudo tailscale up --ssh --hostname=node-dev"
+}
