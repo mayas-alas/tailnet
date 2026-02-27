@@ -1,23 +1,19 @@
 {
-  "name": "Proxmox",
-  "service": "tailnet",
+  "name": "Tailnet Podman Environment",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers-extra/features/podman-homebrew:1": {}
+  },
   "containerEnv": {
-    "BOOT": "proxmox",
-    "CPU_CORES": "max",
-    "RAM_SIZE": "half",
-    "DISK_SIZE": "174G",
-    "MACHINE": "q35",
-    "KVM": "Y",
-    "GPU": "Y",
-    "DISK_FMT": "qcow2",
-    "DISK_TYPE": "scsi",
-    "DISK_IO": "threads",
-    "VM_NET_IP": "10.4.20.99",
-    "ENGINE": "docker",
+    "ENGINE": "podman",
     "SUPPORT": "https://github.com/mayas-alas/tailnet"
   },
   "runArgs": [
-    "--device=/dev/net/tun"
+    "--device=/dev/net/tun",
+    "--privileged"
   ],
   "forwardPorts": [
     8006
@@ -28,9 +24,5 @@
       "onAutoForward": "notify"
     }
   },
-  "otherPortsAttributes": {
-    "onAutoForward": "ignore"
-  },
-  "dockerComposeFile": "codespaces.yml",
-  "postCreateCommand": "sudo tailscale up --ssh --hostname=tailnet"
+  "postCreateCommand": "sudo tailscale up --ssh --hostname=node-dev"
 }

@@ -29,5 +29,5 @@
     "onAutoForward": "ignore"
   },
   "dockerComposeFile": "../codespaces.yml",
-  "postCreateCommand": "sudo tailscale up --ssh --hostname=tailnet"
+  "postCreateCommand": "sudo tailscale up --ssh --hostname=proxmox-dev"
 }

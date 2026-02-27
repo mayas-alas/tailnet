@@ -7,9 +7,6 @@ services:
       context: .
     image: tailnet:0.0.4-beta
     privileged: true
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv6.ip_forward=1
     network_mode: bridge
     volumes:
       - ./qemu:/storage
@@ -31,7 +28,7 @@ services:
           target: /usr/share/novnc/mandatory.json
         - action: sync
           path: ./web/conf/nginx.conf
-          target: /etc/nginx/sites-enabled/web.conf
+          target: /etc/nginx/nginx.conf
         - action: sync
           path: ./tailnet.sh
           target: /tailnet.sh

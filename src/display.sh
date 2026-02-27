@@ -43,29 +43,34 @@ msg="Configuring display drivers..."
 html "$msg"
 [[ "$DEBUG" == [Yy1]* ]] && echo "$msg"
 
-[[ "${VGA,,}" == "virtio" ]] && VGA="virtio-vga-gl"
-DISPLAY_OPTS="-display egl-headless,rendernode=$RENDERNODE"
-DISPLAY_OPTS+=" -device $VGA"
-
-[[ "${DISPLAY,,}" == "vnc" ]] && DISPLAY_OPTS+=" -vnc :$port"
-[[ "${DISPLAY,,}" == "web" ]] && DISPLAY_OPTS+=" -vnc :$port,websocket=$WSS_PORT"
-
 [ ! -d /dev/dri ] && mkdir -m 755 /dev/dri
 
 # Extract the card number from the render node
-CARD_NUMBER=$(echo "$RENDERNODE" | grep -oP '(?<=renderD)\d+')
+CARD_NUMBER=$(echo "$RENDERNODE" | grep -oP '(?<=renderD)\d+' || echo "128")
 CARD_DEVICE="/dev/dri/card$((CARD_NUMBER - 128))"
 
 if [ ! -c "$CARD_DEVICE" ]; then
-  if mknod "$CARD_DEVICE" c 226 $((CARD_NUMBER - 128)); then
+  if mknod "$CARD_DEVICE" c 226 $((CARD_NUMBER - 128)) 2>/dev/null; then
     chmod 666 "$CARD_DEVICE"
   fi
 fi
 
 if [ ! -c "$RENDERNODE" ]; then
-  if mknod "$RENDERNODE" c 226 "$CARD_NUMBER"; then
+  if mknod "$RENDERNODE" c 226 "$CARD_NUMBER" 2>/dev/null; then
     chmod 666 "$RENDERNODE"
   fi
+fi
+
+if [ -c "$RENDERNODE" ]; then
+  [[ "${VGA,,}" == "virtio" ]] && VGA="virtio-vga-gl"
+  DISPLAY_OPTS="-display egl-headless,rendernode=$RENDERNODE"
+  DISPLAY_OPTS+=" -device $VGA"
+
+  [[ "${DISPLAY,,}" == "vnc" ]] && DISPLAY_OPTS+=" -vnc :$port"
+  [[ "${DISPLAY,,}" == "web" ]] && DISPLAY_OPTS+=" -vnc :$port,websocket=$WSS_PORT"
+else
+  msg="Warning: Render node $RENDERNODE not found, GPU acceleration disabled."
+  [[ "$DEBUG" == [Yy1]* ]] && echo "$msg"
 fi
 
 addPackage "xserver-xorg-video-intel" "Intel GPU drivers"

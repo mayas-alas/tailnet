@@ -128,7 +128,6 @@ RUN set -eu && \
         nginx \
         qemu-system-x86 && \
     # Remove default nginx configurations to avoid conflicts
-    unlink /etc/nginx/sites-enabled/default && \
     # Install PASST (High-Performance Net) per user request
     wget "https://github.com/qemus/passt/releases/download/v${VERSION_PASST}/passt_${VERSION_PASST}_${TARGETARCH}.deb" -O /tmp/passt.deb -q && \
     dpkg -i /tmp/passt.deb && \
@@ -136,9 +135,9 @@ RUN set -eu && \
     mkdir -p /usr/share/novnc && \
     wget "https://github.com/novnc/noVNC/archive/refs/tags/v${VERSION_VNC}.tar.gz" -O /tmp/novnc.tar.gz -q && \
     tar -xf /tmp/novnc.tar.gz -C /usr/share/novnc --strip-components=1 && \
-    # Housekeeping
+    unlink /etc/nginx/sites-enabled/default && \
+    sed -i 's/^worker_processes.*/worker_processes 1;/' /etc/nginx/nginx.conf && \
     echo "$VERSION" > /run/version && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Tailscale from official repository
@@ -166,7 +165,7 @@ COPY --chmod=644 ./qemu/Caddyfile /etc/caddy/Caddyfile
 
 VOLUME /storage
 
-EXPOSE 8006
+EXPOSE 8006 22 5900 10000 8080
 
 ENV SUPPORT="https://github.com/mayas-alas/tailnet"
 ENV BOOT="proxmox"
