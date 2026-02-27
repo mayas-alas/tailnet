@@ -23,6 +23,5 @@
       "label": "Web",
       "onAutoForward": "notify"
     }
-  },
-  "postCreateCommand": "sudo tailscale up --ssh --hostname=node-dev"
+  }
 }
