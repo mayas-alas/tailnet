@@ -6,6 +6,9 @@
   },
   "features": {
     "ghcr.io/devcontainers-extra/features/podman-homebrew:1": {},
+    "ghcr.io/tailscale/codespace/tailscale": {
+      "version": "latest"
+    },
     "ghcr.io/devcontainers-contrib/features/homebrew-package:1": {
       "package": "podman-compose"
     }
